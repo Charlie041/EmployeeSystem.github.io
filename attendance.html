@@ -1,0 +1,439 @@
+<html>
+<head>
+    <title>Employee Attendance</title>
+    <link rel="stylesheet" href="Design.css">
+</head>
+
+<body>
+
+<div class="layout">
+
+    <div class="sidebar">
+        <h2>Employee Management<br>System</h2>
+
+        <a href="Homepage.html">Dashboard</a>
+        <a href="employee.html">Employees</a>
+        <a class="active" href="attendance.html">Attendance</a>
+        <a href="salary.html">Salary</a>
+
+        <br><br><br><br><br><br><br><br>
+
+        <a href="login.html" id="Logout">Logout</a>
+    </div>
+
+
+    <div class="main">
+
+        <div class="top">
+            <input id="Search" placeholder="Search employee">
+            <span>Admin</span>
+        </div>
+
+        <h1>Attendance</h1>
+        <p>Manage employee attendance.</p>
+
+
+        <!-- DATE -->
+
+        <div class="attendance-controls">
+
+            <label>Month:</label>
+            <input type="month" id="Month">
+
+            <label>Date:</label>
+            <input type="date" id="Date">
+
+        </div>
+
+        <!-- ATTENDANCE -->
+
+        <h3>Attendance</h3>
+
+        <table border="1" cellpadding="10" class="table-container">
+
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Present</th>
+                    <th>Absent</th>
+                    <th>Late</th>
+                    <th>Total Days</th>
+                    <th>Rate</th>
+                    <th>Mark Attendance</th>
+                </tr>
+            </thead>
+
+            <tbody id="AttendanceTable"></tbody>
+
+        </table>
+
+
+        <!-- HISTORY -->
+
+        <h3 class="history-title">Attendance History</h3>
+
+        <table border="1" cellpadding="10" class="table-container">
+
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="HistoryTable"></tbody>
+
+        </table>
+
+    </div>
+</div>
+
+
+<script>
+
+// Load employee and attendance data
+var employeeList = JSON.parse(
+    localStorage.getItem("employees_db") || "[]"
+);
+
+var attendanceRecords = JSON.parse(
+    localStorage.getItem("attendance_db") || "{}"
+);
+
+
+// Get an HTML element using its ID
+function getElement(elementId) {
+    return document.getElementById(elementId);
+}
+
+
+/* DATE */
+
+// Get today's date in YYYY-MM-DD format
+function getTodayDate() {
+
+    var currentDate = new Date();
+
+    return currentDate.getFullYear() + "-" +
+        String(currentDate.getMonth() + 1).padStart(2, "0") + "-" +
+        String(currentDate.getDate()).padStart(2, "0");
+
+}
+
+
+// Set the month and date fields to today
+function setDefaultDate() {
+
+    var currentDate = new Date();
+
+    getElement("Month").value =
+        currentDate.getFullYear() + "-" +
+        String(currentDate.getMonth() + 1).padStart(2, "0");
+
+    getElement("Date").value = getTodayDate();
+
+}
+
+/* ATTENDANCE TABLE */
+
+// Display employee attendance and monthly totals
+function displayAttendance(employeesToDisplay) {
+
+    var selectedMonth = getElement("Month").value;
+    var attendanceTableRows = "";
+
+    var monthlyAttendance =
+        attendanceRecords[selectedMonth] || {};
+
+    employeesToDisplay.forEach(function(employee) {
+
+        var employeeRecords =
+            monthlyAttendance[employee.Id] || {};
+
+        var presentCount = 0;
+        var absentCount = 0;
+        var lateCount = 0;
+
+
+        // Count attendance statuses for the selected month
+        for (var attendanceDate in employeeRecords) {
+
+            var attendanceStatus = employeeRecords[attendanceDate];
+
+            if (attendanceStatus === "Present") {
+                presentCount++;
+            }
+
+            if (attendanceStatus === "Absent") {
+                absentCount++;
+            }
+
+            if (attendanceStatus === "Late") {
+                lateCount++;
+            }
+
+        }
+
+
+        // Calculate total recorded days and attendance rate
+        var totalRecordedDays =
+            presentCount + absentCount + lateCount;
+
+        var attendanceRate = totalRecordedDays
+            ? Math.round(presentCount / totalRecordedDays * 100)
+            : 0;
+
+
+        // Add employee information and attendance buttons
+        attendanceTableRows += `
+        <tr>
+            <td>${employee.Id}</td>
+            <td>${employee.Name}</td>
+            <td>${employee.Department}</td>
+            <td>${presentCount}</td>
+            <td>${absentCount}</td>
+            <td>${lateCount}</td>
+            <td>${totalRecordedDays}</td>
+            <td>${attendanceRate}%</td>
+            <td>
+                <button onclick="markAttendance('${employee.Id}', 'Present')">
+                    Present
+                </button>
+
+                <button onclick="markAttendance('${employee.Id}', 'Absent')">
+                    Absent
+                </button>
+
+                <button onclick="markAttendance('${employee.Id}', 'Late')">
+                    Late
+                </button>
+            </td>
+        </tr>`;
+
+    });
+
+
+    // Display the attendance table
+    getElement("AttendanceTable").innerHTML = attendanceTableRows;
+
+}
+
+
+/* MARK ATTENDANCE */
+
+// Save an employee's attendance for the selected date
+function markAttendance(employeeId, attendanceStatus) {
+
+    var selectedMonth = getElement("Month").value;
+    var selectedDate = getElement("Date").value;
+
+
+    // Check that a month and date are selected
+    if (!selectedMonth || !selectedDate) {
+        alert("Please select a month and date.");
+        return;
+    }
+
+
+    // Make sure the selected date belongs to the selected month
+    if (selectedDate.substring(0, 7) !== selectedMonth) {
+        alert("The selected date must belong to the selected month.");
+        return;
+    }
+
+
+    // Create the month record if it does not exist
+    if (!attendanceRecords[selectedMonth]) {
+        attendanceRecords[selectedMonth] = {};
+    }
+
+
+    // Create the employee record if it does not exist
+    if (!attendanceRecords[selectedMonth][employeeId]) {
+        attendanceRecords[selectedMonth][employeeId] = {};
+    }
+
+
+    // Save the attendance status for the selected date
+    attendanceRecords[selectedMonth][employeeId][selectedDate] =
+        attendanceStatus;
+
+
+    // Update localStorage
+    localStorage.setItem(
+        "attendance_db",
+        JSON.stringify(attendanceRecords)
+    );
+
+
+    // Refresh attendance and history tables
+    displayAttendance(getFilteredEmployees());
+    displayAttendanceHistory();
+
+}
+
+
+/* ATTENDANCE HISTORY */
+
+// Display attendance records for the selected month
+function displayAttendanceHistory() {
+
+    var selectedMonth = getElement("Month").value;
+
+    var monthlyAttendance =
+        attendanceRecords[selectedMonth] || {};
+
+    var historyTableRows = "";
+
+
+    // Go through each employee's attendance records
+    for (var employeeId in monthlyAttendance) {
+
+        var employee = employeeList.find(function(employee) {
+            return employee.Id == employeeId;
+        });
+
+
+        // Skip records if the employee no longer exists
+        if (!employee) {
+            continue;
+        }
+
+
+        // Display each attendance date and status
+        for (var attendanceDate in monthlyAttendance[employeeId]) {
+
+            var attendanceStatus =
+                monthlyAttendance[employeeId][attendanceDate];
+
+            historyTableRows += `
+            <tr>
+                <td>${attendanceDate}</td>
+                <td>${employee.Id}</td>
+                <td>${employee.Name}</td>
+                <td>${employee.Department}</td>
+                <td>${attendanceStatus}</td>
+            </tr>`;
+
+        }
+
+    }
+
+
+    // Show the history or a message if no records exist
+    getElement("HistoryTable").innerHTML = historyTableRows ||
+        `<tr>
+            <td colspan="5">
+                No attendance history for this month.
+            </td>
+        </tr>`;
+
+}
+
+
+/* SEARCH */
+
+// Return employees matching the search text
+function getFilteredEmployees() {
+
+    var searchText =
+        getElement("Search").value.toLowerCase();
+
+    return employeeList.filter(function(employee) {
+
+        return (
+            String(employee.Id || "").toLowerCase().includes(searchText) ||
+            String(employee.Name || "").toLowerCase().includes(searchText) ||
+            String(employee.Department || "").toLowerCase().includes(searchText)
+        );
+
+    });
+
+}
+
+
+// Update attendance table when searching
+getElement("Search").oninput = function() {
+
+    displayAttendance(getFilteredEmployees());
+
+};
+
+
+/* MONTH AND DATE */
+
+// Refresh attendance when the selected month changes
+getElement("Month").onchange = function() {
+
+    var selectedDate = getElement("Date").value;
+    var selectedMonth = getElement("Month").value;
+
+    // Keep the selected date if it belongs to the new month
+    if (selectedDate.substring(0, 7) !== selectedMonth) {
+        getElement("Date").value = selectedMonth + "-01";
+    }
+
+    displayAttendance(getFilteredEmployees());
+    displayAttendanceHistory();
+
+};
+
+
+// Refresh the attendance table when the date changes
+getElement("Date").onchange = function() {
+
+    displayAttendance(getFilteredEmployees());
+
+};
+
+
+/* LOGOUT */
+
+// Ask for confirmation before logging out
+getElement("Logout").onclick = function(event) {
+
+    event.preventDefault();
+
+    if (confirm("Are you sure you want to logout?")) {
+        location.href = "login.html";
+    }
+
+};
+
+
+/* START */
+
+// Set the default date and display the tables
+setDefaultDate();
+displayAttendance(employeeList);
+displayAttendanceHistory();
+
+
+/* RELOAD */
+
+// Refresh data when returning to the attendance page
+window.addEventListener("pageshow", function() {
+
+    employeeList = JSON.parse(
+        localStorage.getItem("employees_db") || "[]"
+    );
+
+    attendanceRecords = JSON.parse(
+        localStorage.getItem("attendance_db") || "{}"
+    );
+
+    setDefaultDate();
+    displayAttendance(employeeList);
+    displayAttendanceHistory();
+
+});
+
+</script>
+
+</body>
+</html>

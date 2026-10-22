@@ -1,0 +1,336 @@
+<html>
+<head>
+    <title>Employee List</title>
+    <link rel="stylesheet" href="Design.css">
+</head>
+
+<body>
+<div class="layout">
+
+    <div class="sidebar">
+        <h2>Employee Management<br>System</h2>
+
+        <a href="Homepage.html">Dashboard</a>
+        <a href="employee.html" class="active">Employees</a>
+        <a href="attendance.html">Attendance</a>
+        <a href="salary.html">Salary</a>
+
+        <br><br><br><br><br><br><br><br>
+
+        <a href="login.html" id="Logout">Logout</a>
+    </div>
+
+    <div class="main">
+
+        <div class="top">
+            <input id="Search" placeholder="Search employee">
+            <span>Admin</span>
+        </div>
+
+        <h1>Employee List</h1>
+
+        <button class="add-button" onclick="ShowForm()">
+            Add Employee +
+        </button>
+
+        <div class="employee-form" id="EmployeeForm">
+            <h2 id="FormTitle">Add New Employee</h2>
+
+            <form id="EmployeeFormData">
+                <div class="form-grid">
+
+                    <div>
+                        <label>Employee ID</label>
+                        <input id="EmployeeID" required>
+                    </div>
+
+                    <div>
+                        <label>Full Name</label>
+                        <input id="EmployeeName" required>
+                    </div>
+
+                    <div>
+                        <label>Department</label>
+                        <select id="Department" required>
+                            <option value="">Select Department</option>
+                            <option>Washing</option>
+                            <option>Drying</option>
+                            <option>Packing</option>
+                            <option>Delivery</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Position</label>
+                        <select id="Position" required>
+                            <option value="">Select Position</option>
+                            <option>Regular</option>
+                            <option>Part Time</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Employee Status</label>
+                        <select id="EmployeeStatus">
+                            <option>Active</option>
+                            <option>Inactive</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label>Contact Number</label>
+                        <input id="Contact" type="tel">
+                    </div>
+
+                    <div>
+                        <label>Email Address</label>
+                        <input id="Email" type="email">
+                    </div>
+
+                </div>
+
+                <button class="save-button">Save Employee</button>
+
+                <button type="button" class="cancel-button"
+                    onclick="HideForm()">Cancel</button>
+            </form>
+        </div>
+
+        <div class="filters">
+            <select id="DepartmentFilter">
+                <option value="">All Departments</option>
+                <option>Washing</option>
+                <option>Drying</option>
+                <option>Packing</option>
+                <option>Delivery</option>
+            </select>
+
+            <select id="PositionFilter">
+                <option value="">All Positions</option>
+                <option>Regular</option>
+                <option>Part Time</option>
+            </select>
+
+            <select id="StatusFilter">
+                <option value="">All Status</option>
+                <option>Active</option>
+                <option>Inactive</option>
+            </select>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Position</th>
+                        <th>Employee Status</th>
+                        <th>Contact</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="EmployeeTable"></tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script>
+var employees = JSON.parse(
+    localStorage.getItem("employees_db") || "[]"
+);
+
+var editIndex = -1;
+
+// Save employees
+function SaveData() {
+    localStorage.setItem("employees_db", JSON.stringify(employees));
+}
+
+// Show form
+function ShowForm() {
+    editIndex = -1;
+    document.getElementById("EmployeeFormData").reset();
+    document.getElementById("EmployeeID").disabled = false;
+    document.getElementById("FormTitle").textContent = "Add New Employee";
+    document.getElementById("EmployeeForm").style.display = "block";
+}
+
+// Hide form
+function HideForm() {
+    document.getElementById("EmployeeForm").style.display = "none";
+    document.getElementById("EmployeeFormData").reset();
+    document.getElementById("EmployeeID").disabled = false;
+    editIndex = -1;
+}
+
+// Add or update employee
+document.getElementById("EmployeeFormData").onsubmit = function(e) {
+    e.preventDefault();
+
+    var id = document.getElementById("EmployeeID").value.trim();
+
+    var duplicate = employees.some(function(emp, i) {
+        return String(emp.Id || emp.EmployeeID).toLowerCase() === id.toLowerCase()
+            && i !== editIndex;
+    });
+
+    if (duplicate) {
+        alert("This Employee ID already exists.");
+        return;
+    }
+
+    var old = editIndex >= 0 ? employees[editIndex] : {};
+
+    var emp = {
+        ...old,
+        Id: id,
+        Name: document.getElementById("EmployeeName").value.trim(),
+        Department: document.getElementById("Department").value,
+        Position: document.getElementById("Position").value,
+        EmployeeStatus: document.getElementById("EmployeeStatus").value,
+        Contact: document.getElementById("Contact").value.trim(),
+        Email: document.getElementById("Email").value.trim()
+    };
+
+    delete emp.Salary;
+
+    if (editIndex < 0) {
+        employees.push(emp);
+    } else {
+        employees[editIndex] = emp;
+    }
+
+    SaveData();
+    HideForm();
+    FilterEmployees();
+};
+
+// Display employees
+function DisplayEmployees(data) {
+    document.getElementById("EmployeeTable").innerHTML = data.map(function(e) {
+        var i = employees.indexOf(e);
+
+        return `
+            <tr>
+                <td>${e.Id || e.EmployeeID || "-"}</td>
+                <td>${e.Name || e.EmployeeName || "-"}</td>
+                <td>${e.Department || "-"}</td>
+                <td>${e.Position || "-"}</td>
+                <td>${e.EmployeeStatus || "Active"}</td>
+                <td>${e.Contact || "-"}</td>
+                <td>${e.Email || "-"}</td>
+                <td>
+                    <button onclick="ViewEmployee(${i})">View</button>
+                    <button onclick="EditEmployee(${i})">Edit</button>
+                    <button onclick="DeleteEmployee(${i})">Delete</button>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+// Search and filter employees
+function FilterEmployees() {
+    var q = document.getElementById("Search").value.toLowerCase();
+    var dept = document.getElementById("DepartmentFilter").value;
+    var pos = document.getElementById("PositionFilter").value;
+    var status = document.getElementById("StatusFilter").value;
+
+    var filtered = employees.filter(function(e) {
+        var details = [
+            e.Id, e.Name, e.EmployeeID, e.EmployeeName,
+            e.Department, e.Position, e.Email, e.Contact
+        ].join(" ").toLowerCase();
+
+        return details.includes(q)
+            && (!dept || e.Department === dept)
+            && (!pos || e.Position === pos)
+            && (!status || (e.EmployeeStatus || "Active") === status);
+    });
+
+    DisplayEmployees(filtered);
+}
+
+// View employee
+function ViewEmployee(i) {
+    var e = employees[i];
+
+    alert(
+        `Employee ID: ${e.Id || e.EmployeeID}
+Name: ${e.Name || e.EmployeeName}
+Department: ${e.Department || "-"}
+Position: ${e.Position || "-"}
+Status: ${e.EmployeeStatus || "Active"}
+Contact: ${e.Contact || "-"}
+Email: ${e.Email || "-"}`
+    );
+}
+
+// Edit employee
+function EditEmployee(i) {
+    var e = employees[i];
+
+    editIndex = i;
+
+    document.getElementById("EmployeeID").value = e.Id || e.EmployeeID;
+    document.getElementById("EmployeeName").value = e.Name || e.EmployeeName;
+    document.getElementById("Department").value = e.Department;
+    document.getElementById("Position").value = e.Position;
+    document.getElementById("EmployeeStatus").value = e.EmployeeStatus || "Active";
+    document.getElementById("Contact").value = e.Contact || "";
+    document.getElementById("Email").value = e.Email || "";
+
+    document.getElementById("EmployeeID").disabled = true;
+    document.getElementById("FormTitle").textContent = "Edit Employee Information";
+    document.getElementById("EmployeeForm").style.display = "block";
+}
+
+// Delete employee
+function DeleteEmployee(i) {
+    if (confirm("Are you sure you want to delete this employee?")) {
+        employees.splice(i, 1);
+        SaveData();
+        FilterEmployees();
+    }
+}
+
+// Search and filter events
+document.getElementById("Search").oninput = FilterEmployees;
+
+[
+    "DepartmentFilter",
+    "PositionFilter",
+    "StatusFilter"
+].forEach(function(id) {
+    document.getElementById(id).onchange = FilterEmployees;
+});
+
+// Logout
+document.getElementById("Logout").onclick = function(e) {
+    e.preventDefault();
+
+    if (confirm("Are you sure you want to logout?")) {
+        location.href = "login.html";
+    }
+};
+
+// Reload saved employees
+window.onpageshow = function() {
+    employees = JSON.parse(
+        localStorage.getItem("employees_db") || "[]"
+    );
+
+    FilterEmployees();
+};
+
+FilterEmployees();
+</script>
+
+</body>
+</html>

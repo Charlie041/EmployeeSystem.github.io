@@ -1,0 +1,179 @@
+<html>
+<head>
+    <title>Employee System</title>
+    <link rel="stylesheet" href="Design.css">
+</head>
+
+<body>
+<div class="layout">
+
+    <div class="sidebar">
+        <h2>Employee Management<br>System</h2>
+
+        <a class="active" href="Homepage.html">Dashboard</a>
+        <a href="employee.html">Employees</a>
+        <a href="attendance.html">Attendance</a>
+        <a href="salary.html">Salary</a>
+
+        <br><br><br><br><br><br><br><br>
+
+        
+        <a href="login.html" id="Logout">Logout</a>
+    </div>
+
+    <div class="main">
+
+        <div class="top">
+            <input type="text" id="Search" placeholder="Search employee">
+            <span>Admin</span>
+        </div>
+
+        <h1>Dashboard</h1>
+        <p>Welcome back, Admin!</p>
+
+        <p class="dashboard-date">
+            Date: <span id="TodayDate"></span>
+        </p>
+
+        <div class="cards">
+
+            <div class="card green">
+                <p>Total Employees</p>
+                <h2 id="Total">0</h2>
+            </div>
+
+            <div class="card blue">
+                <p>Present Today</p>
+                <h2 id="Present">0</h2>
+            </div>
+
+            <div class="card orange">
+                <p>Absent Today</p>
+                <h2 id="Absent">0</h2>
+            </div>
+
+        </div>
+
+        <h3>Attendance Today</h3>
+
+        <table border="1" cellpadding="10" class ="table-container">
+            <thead>
+                <tr>
+                    <th>Employee Name</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="EmployeeTable"></tbody>
+        </table>
+
+    </div>
+</div>
+
+<script>
+var employees = JSON.parse(localStorage.getItem("employees_db") || "[]");
+var attendance = JSON.parse(localStorage.getItem("attendance_db") || "{}");
+
+function $(id) {
+    return document.getElementById(id);
+}
+
+function GetToday() {
+    var d = new Date();
+
+    return d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0");
+}
+
+function GetMonth() {
+    var d = new Date();
+
+    return d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0");
+}
+
+function DisplayDate() {
+    $("TodayDate").innerHTML = new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+    });
+}
+
+function DisplayEmployees(data) {
+
+    var table = "";
+    var present = 0;
+    var absent = 0;
+    var today = GetToday();
+    var monthData = attendance[GetMonth()] || {};
+
+    for (var i = 0; i < data.length; i++) {
+
+        var emp = data[i];
+        var record = monthData[emp.Id] || {};
+        var status = record[today] || "Not Marked";
+
+        if (status == "Present") present++;
+        if (status == "Absent") absent++;
+
+        table += "<tr>" +
+            "<td>" + emp.Name + "</td>" +
+            "<td>" + emp.Department + "</td>" +
+            "<td>" + status + "</td>" +
+            "</tr>";
+    }
+
+    $("EmployeeTable").innerHTML = table;
+    $("Total").innerHTML = employees.length;
+    $("Present").innerHTML = present;
+    $("Absent").innerHTML = absent;
+}
+
+DisplayDate();
+DisplayEmployees(employees);
+
+$("Search").oninput = function() {
+
+    var search = this.value.toLowerCase();
+
+    var result = employees.filter(function(emp) {
+
+        return String(emp.Name || "").toLowerCase().includes(search) ||
+               String(emp.Department || "").toLowerCase().includes(search) ||
+               String(emp.Id || "").toLowerCase().includes(search);
+    });
+
+    DisplayEmployees(result);
+};
+
+$("Logout").onclick = function(e) {
+
+    e.preventDefault();
+
+    if (confirm("Are you sure you want to logout?")) {
+        location.href = "login.html";
+    }
+};
+
+window.addEventListener("pageshow", function() {
+
+    employees = JSON.parse(
+        localStorage.getItem("employees_db") || "[]"
+    );
+
+    attendance = JSON.parse(
+        localStorage.getItem("attendance_db") || "{}"
+    );
+
+    DisplayDate();
+    DisplayEmployees(employees);
+});
+        </script>
+
+    </body>
+</html>
+

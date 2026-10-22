@@ -1,0 +1,208 @@
+
+<html>
+<head>
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="Design.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f7f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .login-container {
+            display: flex;
+            width: 800px;
+            max-width: 90%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px #d5e5da;
+        }
+
+        .login-left {
+            width: 40%;
+            background: #176b45;
+            color: white;
+            padding: 40px 25px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .login-left h1 {
+            font-size: 28px;
+            line-height: 1.3;
+        }
+
+        .login-left p {
+            line-height: 1.7;
+            color: #e0f2e7;
+        }
+
+        .login-right {
+            width: 60%;
+            padding: 45px 40px;
+            box-sizing: border-box;
+        }
+
+        .login-right h2 {
+            color: #176b45;
+            font-size: 30px;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #788b80;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #24533c;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 22px;
+            border: 1px solid #c8dfd1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #198754;
+            box-shadow: 0 0 4px #c8dfd1;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            background: #198754;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .login-button:hover {
+            background: #146c43;
+        }
+
+        #message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #788b80;
+            margin-top: 25px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-left,
+            .login-right {
+                width: 100%;
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+
+<body style="background: #bcc3cf;">
+
+    <div class="login-container">
+
+        <div class="login-left">
+            <h1 style="font-style: italic;">Employee System</h1>
+
+            <p>
+                Prince PJ Bottle Trading
+            </p>
+        </div>
+
+        <div class="login-right">
+
+            <h2>Welcome!!</h2>
+
+            <p class="subtitle">
+                Please Login to access the Employee System.
+            </p>
+
+            <form onsubmit="Login(event)">
+
+                <label for="username">Username</label>
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Enter your username"
+                    required
+                >
+
+                <label for="password">Password</label>
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter your password"
+                    required
+                >
+
+                <button type="submit" class="login-button">
+                    Login
+                </button>
+
+                <p id="message"></p>
+
+            </form>
+
+            <div class="footer">
+                Admin Access Only
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function Login(event) {
+            event.preventDefault();
+
+            var username =
+                document.getElementById("username").value;
+
+            var password =
+                document.getElementById("password").value;
+
+            if (username == "123456789" && password == "123456789") {
+                window.location.href = "Homepage.html";
+            } else {
+                document.getElementById("message").textContent =
+                    "Invalid username or password.";
+            }
+        }
+    </script>
+
+</body>
+</html>
